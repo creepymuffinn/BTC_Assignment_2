@@ -1,9 +1,9 @@
 const { Web3 } = require("web3");
 
 const infuraAPIKey = "https://sepolia.infura.io/v3/50be2811b4594daca99f11996474dcc8";
-
 const privateKey = 'a1bb8dcd66a4ef8c40767d43b2f3487bad425f955c15657b7a61db5bad7828c7';
-const senderAddress = '0x35E2327070624cEDab04887284485Bbb9c1DD5730';
+const senderAddress = '0x35E2327070624cEDab04887284485Bbb9c1DD573';
+const contractAddress = "0x95c5DA4C782f8aE1F56F49e68D7c22Cc182Ddc7b";
 
 const contractABI = [
 	{
@@ -372,6 +372,32 @@ const contractABI = [
 		"type": "function"
 	}
 ];
-const contractAddress = "0x95c5DA4C782f8aE1F56F49e68D7c22Cc182Ddc7b";
 
 const web3 = new Web3(infuraAPIKey);
+const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+const gas = 200000;
+const gasPrice = '100000000000';
+
+const txParams = {
+    from: senderAddress,
+    to: contractAddress,
+    data: contract.methods.getTransactionReceiver().encodeABI(),
+    gas,
+    gasPrice,
+};
+
+const main = async () => {
+    try {
+        const result = await contract.methods.getTransactionReceiver().call();
+        console.log("Transaction Receiver:", result);
+
+        const signedTx = await web3.eth.accounts.signTransaction(txParams, privateKey);
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log("Transaction successful! Transaction Hash:", receipt.transactionHash);
+    } catch (error) {
+        console.error("Transaction failed:", error.message || error);
+    }
+};
+
+main();
